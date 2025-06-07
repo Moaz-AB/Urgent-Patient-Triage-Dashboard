@@ -1,0 +1,296 @@
+import React, { useState } from 'react';
+import { AlertTriangle, Clock, User, Phone, ChevronRight, Search, Filter } from 'lucide-react';
+
+const TriageDashboard = () => {
+  const [selectedRole, setSelectedRole] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedSymptom, setSelectedSymptom] = useState(null);
+
+  const urgentScenarios = [
+    {
+      id: 1,
+      symptom: "Chest Pain",
+      severity: "critical",
+      timeframe: "Immediate",
+      primaryResponder: "MD",
+      backupResponder: "APP",
+      actions: ["Call MD immediately", "Prepare for 911 if needed", "Document vitals"],
+      description: "Any chest pain, pressure, or discomfort",
+      escalationPath: ["PCC → RN → MD", "If MD unavailable: APP", "If no response: 911"]
+    },
+    {
+      id: 2,
+      symptom: "Shortness of Breath",
+      severity: "critical",
+      timeframe: "Immediate",
+      primaryResponder: "MD",
+      backupResponder: "APP",
+      actions: ["Assess oxygen needs", "Contact MD stat", "Monitor respiratory status"],
+      description: "Difficulty breathing, wheezing, or respiratory distress",
+      escalationPath: ["PCC → RN → MD", "Consider 911 if severe"]
+    },
+    {
+      id: 3,
+      symptom: "High Potassium (>6.0)",
+      severity: "high",
+      timeframe: "Within 1 hour",
+      primaryResponder: "APP",
+      backupResponder: "MD",
+      actions: ["Review recent labs", "Check medications", "Contact APP within 1 hour"],
+      description: "Lab values indicating hyperkalemia",
+      escalationPath: ["PCC → APP → MD if needed"]
+    },
+    {
+      id: 4,
+      symptom: "Severe Swelling",
+      severity: "high",
+      timeframe: "Within 2 hours",
+      primaryResponder: "APP",
+      backupResponder: "RN",
+      actions: ["Assess extent of edema", "Check weight gain", "Review medications"],
+      description: "Sudden onset or worsening edema",
+      escalationPath: ["PCC → APP", "If APP unavailable: RN → MD"]
+    },
+    {
+      id: 5,
+      symptom: "Medication Questions",
+      severity: "moderate",
+      timeframe: "Same day",
+      primaryResponder: "RN",
+      backupResponder: "APP",
+      actions: ["Review medication list", "Provide education", "Document interaction"],
+      description: "Non-urgent medication inquiries",
+      escalationPath: ["PCC → RN", "Complex cases: RN → APP"]
+    },
+    {
+      id: 6,
+      symptom: "Blood Pressure >180/110",
+      severity: "critical",
+      timeframe: "Immediate",
+      primaryResponder: "MD",
+      backupResponder: "APP",
+      actions: ["Recheck BP", "Contact MD immediately", "Review medications"],
+      description: "Hypertensive crisis levels",
+      escalationPath: ["PCC → RN → MD stat"]
+    }
+  ];
+
+  const roleDefinitions = {
+    'PCC': 'Patient Care Coordinator',
+    'RN': 'Registered Nurse',
+    'APP': 'Advanced Practice Provider',
+    'MD': 'Medical Doctor'
+  };
+
+  const getSeverityColor = (severity) => {
+    switch (severity) {
+      case 'critical': return 'bg-red-100 border-red-300 text-red-800';
+      case 'high': return 'bg-orange-100 border-orange-300 text-orange-800';
+      case 'moderate': return 'bg-yellow-100 border-yellow-300 text-yellow-800';
+      default: return 'bg-gray-100 border-gray-300 text-gray-800';
+    }
+  };
+
+  const getResponderColor = (role) => {
+    switch (role) {
+      case 'MD': return 'bg-blue-600 text-white';
+      case 'APP': return 'bg-green-600 text-white';
+      case 'RN': return 'bg-purple-600 text-white';
+      default: return 'bg-gray-600 text-white';
+    }
+  };
+
+  const filteredScenarios = urgentScenarios.filter(scenario => {
+    const matchesRole = selectedRole === 'all' || 
+                       scenario.primaryResponder === selectedRole || 
+                       scenario.backupResponder === selectedRole;
+    const matchesSearch = scenario.symptom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         scenario.description.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesRole && matchesSearch;
+  });
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-800">Urgent Patient Triage Dashboard</h1>
+              <p className="text-gray-600 mt-2">Clear escalation pathways for urgent patient needs during clinic hours</p>
+            </div>
+            <div className="flex items-center space-x-2 bg-red-50 px-4 py-2 rounded-lg">
+              <AlertTriangle className="h-5 w-5 text-red-600" />
+              <span className="text-red-800 font-semibold">Live Triage Support</span>
+            </div>
+          </div>
+
+          {/* Controls */}
+          <div className="flex flex-wrap gap-4 items-center">
+            <div className="flex items-center space-x-2">
+              <Filter className="h-4 w-4 text-gray-500" />
+              <select 
+                value={selectedRole} 
+                onChange={(e) => setSelectedRole(e.target.value)}
+                className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">All Roles</option>
+                <option value="MD">MD (Medical Doctor)</option>
+                <option value="APP">APP (Advanced Practice Provider)</option>
+                <option value="RN">RN (Registered Nurse)</option>
+                <option value="PCC">PCC (Patient Care Coordinator)</option>
+              </select>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Search className="h-4 w-4 text-gray-500" />
+              <input
+                type="text"
+                placeholder="Search symptoms..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Scenarios List */}
+          <div className="lg:col-span-2 space-y-4">
+            {filteredScenarios.map((scenario) => (
+              <div 
+                key={scenario.id}
+                className={`bg-white rounded-lg shadow-md p-6 cursor-pointer transition-all hover:shadow-lg ${
+                  selectedSymptom?.id === scenario.id ? 'ring-2 ring-blue-500' : ''
+                }`}
+                onClick={() => setSelectedSymptom(scenario)}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-800">{scenario.symptom}</h3>
+                    <p className="text-gray-600 text-sm mt-1">{scenario.description}</p>
+                  </div>
+                  <div className={`px-3 py-1 rounded-full text-xs font-semibold ${getSeverityColor(scenario.severity)}`}>
+                    {scenario.severity.toUpperCase()}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div className="flex items-center space-x-2">
+                    <Clock className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm font-medium">{scenario.timeframe}</span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <User className="h-4 w-4 text-gray-500" />
+                    <span className={`px-2 py-1 rounded text-xs font-semibold ${getResponderColor(scenario.primaryResponder)}`}>
+                      Primary: {scenario.primaryResponder}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <span className={`px-2 py-1 rounded text-xs font-semibold ${getResponderColor(scenario.backupResponder)}`}>
+                      Backup: {scenario.backupResponder}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-600">Escalation:</span>
+                    {scenario.escalationPath[0].split(' → ').map((step, index, array) => (
+                      <React.Fragment key={index}>
+                        <span className="text-xs bg-gray-100 px-2 py-1 rounded">{step}</span>
+                        {index < array.length - 1 && <ChevronRight className="h-3 w-3 text-gray-400" />}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                  <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                    View Details →
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Detail Panel */}
+          <div className="space-y-6">
+            {selectedSymptom ? (
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h3 className="text-xl font-bold text-gray-800 mb-4">
+                  {selectedSymptom.symptom} - Action Plan
+                </h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold text-gray-700 mb-2">Immediate Actions:</h4>
+                    <ul className="space-y-2">
+                      {selectedSymptom.actions.map((action, index) => (
+                        <li key={index} className="flex items-start space-x-2">
+                          <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
+                          <span className="text-sm text-gray-700">{action}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold text-gray-700 mb-2">Escalation Path:</h4>
+                    <div className="space-y-2">
+                      {selectedSymptom.escalationPath.map((path, index) => (
+                        <div key={index} className="text-sm text-gray-700 bg-gray-50 p-2 rounded">
+                          {path}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <div className="flex items-center space-x-4">
+                      <Phone className="h-5 w-5 text-green-600" />
+                      <div>
+                        <p className="font-semibold text-gray-800">Quick Contact</p>
+                        <p className="text-sm text-gray-600">Use secure messaging or designated phone tree</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow-md p-6 text-center">
+                <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">Select a Scenario</h3>
+                <p className="text-gray-600">Click on any urgent scenario to see detailed action plans and escalation pathways.</p>
+              </div>
+            )}
+
+            {/* Role Reference */}
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Role Definitions</h3>
+              <div className="space-y-3">
+                {Object.entries(roleDefinitions).map(([abbrev, full]) => (
+                  <div key={abbrev} className="flex justify-between items-center">
+                    <span className={`px-2 py-1 rounded text-xs font-semibold ${getResponderColor(abbrev)}`}>
+                      {abbrev}
+                    </span>
+                    <span className="text-sm text-gray-700">{full}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-8 bg-white rounded-lg shadow-md p-4">
+          <div className="flex items-center justify-between text-sm text-gray-600">
+            <span>Last updated: {new Date().toLocaleDateString()}</span>
+            <span>Emergency: Call 911 | Clinic Emergency Line: [Your Number]</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
